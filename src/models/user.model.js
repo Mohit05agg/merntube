@@ -1,71 +1,71 @@
-import mongoose,{Schema} from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import jwt from "jsonwebtoken"
-import bcrypt from "bcryptjs"
+import bcrypt from "bcryptjs";
 
 
 
-const userSchema =  new Schema(
+const userSchema = new Schema(
     {
-        username:{
-            type:String,
-            required:true,
+        username: {
+            type: String,
+            required: true,
             unique: true,
             lowercase: true,
             trim: true,
-            index:true, // yeh karne se yeh field searchable ho jayegi database mai
-            
+            index: true, // yeh karne se yeh field searchable ho jayegi database mai
+
         },
-        email:{
-            type:String,
-            required:true,
+        email: {
+            type: String,
+            required: true,
             unique: true,
             lowercase: true,
             trim: true,
         },
-        fullname:{
-            type:String,
-            required:true,
+        fullname: {
+            type: String,
+            required: true,
             trim: true,
             index: true,
         },
-        
-            avatar:{
-                type:String, // cloudinary url
-                required: true,
 
-            },
-            coverImage:{
-                type:String, // cloudinary url
-            },
+        avatar: {
+            type: String, // cloudinary url
+            required: true,
 
-            watchHistory:{
-                type:Schema.Types.ObjectId,
-                ref: "Video"
-            },
-            password:{
-                type:String,  // bcypt librray install karegi jo password kp clear text se hash mai convert karegi
-                required:[true,'password is required']
-            },
-            refreshToken:{
-                type:String
+        },
+        coverImage: {
+            type: String, // cloudinary url
+        },
 
-            }
-    },{timestamps:true})
+        watchHistory: {
+            type: Schema.Types.ObjectId,
+            ref: "Video"
+        },
+        password: {
+            type: String,  // bcypt librray install karegi jo password kp clear text se hash mai convert karegi
+            required: [true, 'password is required']
+        },
+        refreshToken: {
+            type: String
+
+        }
+    }, { timestamps: true })
 
 userSchema.pre("save", async function (next) {
     if (this.isModified("password")) return next();
 
-    this.password = bcrypt.hash(this.password,10)  //clear text ko encypt kardega upto 10 rounds
+    this.password = await bcrypt.hash(this.password, 10)  //clear text ko encypt kardega upto 10 rounds
     next()
 })
 
 userSchema.methods.isPasswordCorrect = async function
-(password){
+    (password) {
     return await bcrypt.compare(password, this.password)
 }
 
 // access token generate
-userSchema.methods.generateAccessToken = function(){
+userSchema.methods.generateAccessToken = function () {
     return jwt.sign(
         {
             _id: this._id,
@@ -82,11 +82,11 @@ userSchema.methods.generateAccessToken = function(){
 }
 
 // refresh token generation
-userSchema.methods.generateRefreshToken = function(){
+userSchema.methods.generateRefreshToken = function () {
     return jwt.sign(
         {
             _id: this._id,
-            
+
 
         },
         process.env.REFRESH_TOKEN_SECRET,
@@ -99,4 +99,4 @@ userSchema.methods.generateRefreshToken = function(){
 
 
 
-export const User  = mongoose.model("User",userSchema)
+export const User = mongoose.model("User", userSchema)
